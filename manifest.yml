@@ -1,0 +1,7 @@
+applications:
+- buildpack: https://github.com/yoshitsugu/heroku-buildpack-rust.git
+  name: slash-pomo
+  command: ./target/release/pomo
+  path: .
+  instances: 1
+  memory: 128M
