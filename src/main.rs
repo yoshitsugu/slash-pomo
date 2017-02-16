@@ -62,11 +62,19 @@ fn pomo_response(user_id: String, text: &str) -> String {
     }
 }
 
+fn get_slack_token() -> Result<String, String> {
+    match env::var("SLACK_TOKEN") {
+        Ok(token) => Ok(token),
+        Err(_) => panic!("SLACK_TOKEN undefined")
+    }
+}
+
 #[post("/", data = "<input>")]
 fn pomo_command(input: Form<SlashParams>) -> JSON<Message> {
     
     let input_inner = input.into_inner();
-    if env::var("SLACK_TOKEN").unwrap() != input_inner.token {
+    let slack_token = get_slack_token().unwrap_o/pr(String::new());
+    if slack_token != input_inner.token {
         return JSON(Message{response_type: "ephemeral".to_string(), text: "Not Allowed to Access".to_string()});
     }
     let text = &*(input_inner.text);
