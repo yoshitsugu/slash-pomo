@@ -20,21 +20,27 @@ use pomo::commands::*;
 
 fn pomo_response(user_id: String, text: &str) -> String {
     let reset = Regex::new(r"^r(eset)? *(\d*)$").unwrap();
+    let reset_only_remaining = Regex::new(r"^(rr|reset remaining)? *(\d*)$").unwrap();
     let done = Regex::new(r"^d(one)? *$").unwrap();
     let show = Regex::new(r"^s(how)? *$").unwrap();
     let set_tomato = Regex::new(r"^(st|set tomato) (.+)$").unwrap();
-    let set_icon = Regex::new(r"^(si|set icon) (.+)$").unwrap();
+    let set_icon = Regex::new(r"^(si|set icon) *(.*)$").unwrap();
     let help = Regex::new(r"^h(elp)? *$").unwrap();
-    let usage = "Usage:\n```\n/pomo (show|s): show detail\n/pomo (done|d): pomo - 1\n/pomo (reset|r) (count|8): reset count (default 8)\n/pomo (set tomato|st) (emoji): set alternative :tomato: emoji\n/pomo (set icon|si) (emoji): set alternative icon emoji\n```";
+    let usage = "Usage:\n```\n/pomo [show/s]: show detail\n/pomo [done/d]: pomo - 1\n/pomo [reset/r] (count=8): reset count (default 8)\n/pomo [reset remaining/rr] (count=8): reset only remaining count (default 8)\n/pomo [set tomato/st] (emoji): set alternative :tomato: emoji\n/pomo [set icon/si] (emoji): set alternative icon emoji\n```";
     if reset.is_match(text) {
         let cap = reset.captures(text).unwrap();
         let reset_count: i32 = if &cap[2] == "" { 8 } else { (&cap[2]).to_string().parse().unwrap() };
         let new_score = set_pomo(user_id, reset_count).unwrap();
         new_score.show_remaining()
+    } else if reset_only_remaining.is_match(text) {
+        let cap = reset_only_remaining.captures(text).unwrap();
+        let reset_only_remaining_count: i32 = if &cap[2] == "" { 8 } else { (&cap[2]).to_string().parse().unwrap() };
+        let new_score = set_remaining(user_id, reset_only_remaining_count).unwrap();
+        new_score.show_remaining()
     } else if done.is_match(text) {
         let score = done_pomo(user_id).unwrap();
         if score.remaining == 0 {
-            "All DONE!!".to_string()
+            "All DONE!! :tada:".to_string()
         } else {
             score.show_remaining()
         }

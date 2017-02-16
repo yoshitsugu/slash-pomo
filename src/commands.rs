@@ -45,6 +45,15 @@ pub fn set_pomo(user_id: String, count: i32) -> redis::RedisResult<PomoScore> {
     Ok(new_score)
 }
 
+pub fn set_remaining(user_id: String, count: i32) -> redis::RedisResult<PomoScore> {
+    let con = try!(redis_con());
+    let key = get_key(&user_id);
+    let score = try!(get_or_create_pomo(user_id));
+    let new_score = PomoScore { remaining: count, done: score.done, tomato_emoji: score.tomato_emoji, icon_emoji: score.icon_emoji } ;
+    let _ : () = try!(con.set(key, serde_json::to_string(&new_score).unwrap()));
+    Ok(new_score)
+}
+
 pub fn done_pomo(user_id: String) -> redis::RedisResult<PomoScore> {
     let con = try!(redis_con());
     let key = get_key(&user_id);
