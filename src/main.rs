@@ -16,7 +16,8 @@ use std::env;
 use pomo::models::{SlashParams, Message};
 use pomo::commands::*;
 
-
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const DEFAULT_MAX_POMO: i32 = 8;
 
 fn pomo_response(user_id: String, text: &str) -> String {
     let reset = Regex::new(r"^r(eset)? *(\d*)$").unwrap();
@@ -26,15 +27,15 @@ fn pomo_response(user_id: String, text: &str) -> String {
     let set_tomato = Regex::new(r"^(st|set tomato) (.+)$").unwrap();
     let set_icon = Regex::new(r"^(si|set icon) *(.*)$").unwrap();
     let help = Regex::new(r"^h(elp)? *$").unwrap();
-    let usage = "Usage:\n```\n/pomo [show/s]: show detail\n/pomo [done/d]: pomo - 1\n/pomo [reset/r] (count=8): reset count (default 8)\n/pomo [reset remaining/rr] (count=8): reset only remaining count (default 8)\n/pomo [set tomato/st] (emoji): set alternative :tomato: emoji\n/pomo [set icon/si] (emoji): set alternative icon emoji\n```";
+    let usage = format!("```/pomo command version {}\n\nUsage:\n/pomo [show/s]: show detail\n/pomo [done/d]: pomo - 1\n/pomo [reset/r] (count=8): reset count (default 8)\n/pomo [reset remaining/rr] (count=8): reset only remaining count (default 8)\n/pomo [set tomato/st] (emoji): set alternative :tomato: emoji\n/pomo [set icon/si] (emoji): set alternative icon emoji\n```", VERSION);
     if reset.is_match(text) {
         let cap = reset.captures(text).unwrap();
-        let reset_count: i32 = if &cap[2] == "" { 8 } else { (&cap[2]).to_string().parse().unwrap() };
+        let reset_count: i32 = if &cap[2] == "" { DEFAULT_MAX_POMO } else { (&cap[2]).to_string().parse().unwrap() };
         let new_score = set_pomo(user_id, reset_count).unwrap();
         new_score.show_remaining()
     } else if reset_only_remaining.is_match(text) {
         let cap = reset_only_remaining.captures(text).unwrap();
-        let reset_only_remaining_count: i32 = if &cap[2] == "" { 8 } else { (&cap[2]).to_string().parse().unwrap() };
+        let reset_only_remaining_count: i32 = if &cap[2] == "" { DEFAULT_MAX_POMO } else { (&cap[2]).to_string().parse().unwrap() };
         let new_score = set_remaining(user_id, reset_only_remaining_count).unwrap();
         new_score.show_remaining()
     } else if done.is_match(text) {
@@ -73,7 +74,7 @@ fn get_slack_token() -> Result<String, String> {
 fn pomo_command(input: Form<SlashParams>) -> JSON<Message> {
     
     let input_inner = input.into_inner();
-    let slack_token = get_slack_token().unwrap_o/pr(String::new());
+    let slack_token = get_slack_token().unwrap_or(String::new());
     if slack_token != input_inner.token {
         return JSON(Message{response_type: "ephemeral".to_string(), text: "Not Allowed to Access".to_string()});
     }

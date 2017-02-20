@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 #[derive(FromForm)]
 pub struct SlashParams {
     pub token: String,
