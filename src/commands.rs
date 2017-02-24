@@ -91,3 +91,24 @@ pub fn set_icon_emoji(user_id: String, emoji: &str) -> redis::RedisResult<()> {
 }    
 
 
+pub fn get_all_pomos() -> redis::RedisResult<Vec<PomoScore>>{
+    let con = redis_con()?;
+    let keys: Vec<String> = con.keys("*_pomo")?;
+    let scores = keys.iter().map(|key| {
+        get_pomo_from_redis(&con, key.clone())
+    }
+    ).collect();
+    Ok(scores)
+}
+
+fn get_pomo_from_redis(con: &redis::Connection, key: String) -> PomoScore {
+    match con.get::<String, String>(key) {
+        Ok(val) => {
+            match serde_json::from_str(&*val) {
+                Ok(value) => value,
+                _ => PomoScore { remaining: 0, done: 0, tomato_emoji: "".to_string(), icon_emoji:  "".to_string()}
+            }
+        }
+        _ => PomoScore { remaining: 0, done: 0, tomato_emoji: "".to_string(), icon_emoji:  "".to_string()}
+    }
+}

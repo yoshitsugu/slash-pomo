@@ -13,7 +13,7 @@ use rocket::config::{Config, Environment};
 use regex::Regex;
 use rocket_contrib::JSON;
 use std::env;
-use pomo::models::{SlashParams, Message};
+use pomo::models::{SlashParams, Message, PomoScore};
 use pomo::commands::*;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -72,7 +72,6 @@ fn get_slack_token() -> Result<String, String> {
 
 #[post("/", data = "<input>")]
 fn pomo_command(input: Form<SlashParams>) -> JSON<Message> {
-    
     let input_inner = input.into_inner();
     let slack_token = get_slack_token().unwrap_or(String::new());
     if slack_token != input_inner.token {
@@ -83,6 +82,17 @@ fn pomo_command(input: Form<SlashParams>) -> JSON<Message> {
     JSON(message)
 }
 
+#[post("/show", data = "<input>")]
+fn show_pomo_list(input: Form<SlashParams>) -> JSON<Vec<PomoScore>> {
+    let input_inner = input.into_inner();
+    let slack_token = get_slack_token().unwrap_or(String::new());
+    if slack_token != input_inner.token {
+        return JSON(vec!());
+    }
+    JSON(get_all_pomos().unwrap())
+}
+    
+
 fn get_server_port() -> usize {
     let port_str = env::var("PORT").unwrap_or(String::new());
     port_str.parse().unwrap_or(8000)
@@ -92,5 +102,5 @@ fn main() {
     let config = Config::default_for(Environment::active().unwrap(), "/custom").unwrap()
         .address("0.0.0.0".into())
         .port(get_server_port());
-    rocket::custom(&config).mount("/", routes![pomo_command]).launch();
+    rocket::custom(&config).mount("/", routes![pomo_command, show_pomo_list]).launch();
 }
