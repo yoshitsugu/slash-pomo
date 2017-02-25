@@ -13,12 +13,48 @@ pub struct SlashParams {
     pub response_url: String
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PomoScore {
+    pub remaining: i32,
+    pub tomato_emoji: String,
+    pub icon_emoji: String,
+    pub histories: Vec<PomoHistory>
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PomoHistory {
+    pub comment: String,
+    pub point: String
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PomoScoreOld {
     pub remaining: i32,
     pub done: i32,
     pub tomato_emoji: String,
-    pub icon_emoji: String
+    pub icon_emoji: String,
+}
+
+impl PomoScoreOld {
+    pub fn convert_to_new(&self) -> PomoScore {
+        PomoScore {
+            remaining: self.remaining,
+            tomato_emoji: self.tomato_emoji.clone(),
+            icon_emoji: self.icon_emoji.clone(),
+            histories: PomoHistory::blank_histories(self.done)
+        }
+    }
+}
+
+impl PomoHistory {
+    fn blank_histories(size: i32) -> Vec<PomoHistory> {
+        let mut histories = Vec::with_capacity(size as usize);
+        for _ in 0..size {
+            histories.push(PomoHistory {comment: "".to_string(), point: "".to_string()});
+        }
+        return histories;
+    }
 }
 
 impl PomoScore {
@@ -26,20 +62,37 @@ impl PomoScore {
         self.show_emoji_by(self.remaining)
     }
 
-    pub fn show_detail(&self) -> String {
-        format!("remaining: {}\ndone: {}\ntomato_emoji: {}\nicon_emoji: {}\n", self.show_emoji_by(self.remaining), self.show_emoji_by(self.done), self.tomato_emoji, self.icon_emoji)
+    pub fn get_done(&self) -> i32 {
+        self.histories.len() as i32
     }
 
-    pub fn done(&self) -> PomoScore {
-        PomoScore { remaining: self.remaining - 1, done: self.done + 1, tomato_emoji: self.tomato_emoji.clone(), icon_emoji: self.icon_emoji.clone() }
+    pub fn show_detail(&self) -> String {
+        format!(
+            "remaining: {}\ndone: {}\ntomato_emoji: {}\nicon_emoji: {}\nhistories:\n```{}\n```",
+            self.show_emoji_by(self.remaining),
+            self.show_emoji_by(self.get_done()),
+            self.tomato_emoji,
+            self.icon_emoji,
+            self.show_histories()
+        )
+    }
+
+    pub fn done(&self, comment: String, point: String) -> PomoScore {
+        let mut histories = self.histories.clone();
+        histories.push( PomoHistory { comment: comment, point: point } );
+        PomoScore { remaining: self.remaining - 1, histories: histories, .. self.clone() }
     }
 
     pub fn set_tomato_emoji(&self, emoji: &str) -> PomoScore {
-        PomoScore { remaining: self.remaining, done: self.done, tomato_emoji: emoji.to_string(), icon_emoji: self.icon_emoji.clone() }
+        PomoScore { tomato_emoji: emoji.to_string(), .. self.clone() }
     }
     
     pub fn set_icon_emoji(&self, emoji: &str) -> PomoScore {
-        PomoScore { remaining: self.remaining, done: self.done, tomato_emoji: self.tomato_emoji.clone(), icon_emoji: emoji.to_string() }
+        PomoScore { icon_emoji: emoji.to_string(), .. self.clone() }
+    }
+
+    pub fn blank_score() -> PomoScore {
+        PomoScore { remaining: 0, tomato_emoji: "".to_string(), icon_emoji:  "".to_string(), histories: vec!() }
     }
 
     fn show_emoji_by(&self, count: i32) -> String {
@@ -49,6 +102,17 @@ impl PomoScore {
         }
         result
     }
+
+    fn show_histories(&self) -> String {
+        let mut hst = "".to_string();
+        for h in self.histories.clone() {
+            let _p = if h.point.len() > 0 { h.point } else { "-".to_string() };
+            let _c = if h.comment.len() > 0 { h.comment } else { "--".to_string() };
+            hst = format!("{}\n{}: {}", hst, _p, _c)
+        }
+        hst
+    }
+
 }
 
 #[derive(Serialize, Debug)]

@@ -1,6 +1,6 @@
 [package]
 name = "pomo"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["Kota Yoshitsugu <yoshitsugu@users.noreply.github.com>"]
 
 [dependencies]
@@ -8,6 +8,7 @@ rocket = "0.1.6"
 rocket_codegen = "0.1.6"
 rocket_contrib = "0.1.6"
 regex = "*"
+getopts = "0.2"
 serde = "0.8.23"
 serde_json = "0.8.6"
 serde_derive = "0.8.23"

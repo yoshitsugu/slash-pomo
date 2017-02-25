@@ -1,8 +1,9 @@
 use redis::Commands;
-use models::PomoScore;
+use models::{PomoScore, PomoScoreOld};
 use std::env;
 use serde_json;
 use redis;
+use getopts::Options;
 
 fn get_key(user_id: &String) -> String {
     format!("{}_pomo", user_id)
@@ -19,7 +20,7 @@ pub fn redis_con() -> redis::RedisResult<redis::Connection> {
 pub fn init_pomo(user_id: String) -> redis::RedisResult<()> {
     let con = redis_con()?;
     let key = get_key(&user_id);
-    let score = PomoScore { remaining: 8, done: 0, tomato_emoji: ":tomato:".to_string(), icon_emoji:  "".to_string()} ;
+    let score = PomoScore { remaining: 8, .. PomoScore::blank_score() };
     let _ : () = con.set(key.to_string(), serde_json::to_string(&score).unwrap())?;
     Ok(())
 }
@@ -31,8 +32,7 @@ pub fn get_or_create_pomo(user_id: String) -> redis::RedisResult<PomoScore> {
     if !exists {
         let _ = init_pomo(user_id);
     }
-    let score_json: String = con.get(key.to_string())?;
-    let score = serde_json::from_str(&*score_json).unwrap();
+    let score = get_pomo_from_redis(&con, key);
     Ok(score)
 }
 
@@ -40,7 +40,7 @@ pub fn set_pomo(user_id: String, count: i32) -> redis::RedisResult<PomoScore> {
     let con = redis_con()?;
     let key = get_key(&user_id);
     let score = get_or_create_pomo(user_id)?;
-    let new_score = PomoScore { remaining: count, done: 0, tomato_emoji: score.tomato_emoji, icon_emoji: score.icon_emoji } ;
+    let new_score = PomoScore { remaining: count, histories: vec!(), .. score } ;
     let _ : () = con.set(key, serde_json::to_string(&new_score).unwrap())?;
     Ok(new_score)
 }
@@ -49,17 +49,26 @@ pub fn set_remaining(user_id: String, count: i32) -> redis::RedisResult<PomoScor
     let con = redis_con()?;
     let key = get_key(&user_id);
     let score = get_or_create_pomo(user_id)?;
-    let new_score = PomoScore { remaining: count, done: score.done, tomato_emoji: score.tomato_emoji, icon_emoji: score.icon_emoji } ;
+    let new_score = PomoScore { remaining: count, .. score } ;
     let _ : () = con.set(key, serde_json::to_string(&new_score).unwrap())?;
     Ok(new_score)
 }
 
-pub fn done_pomo(user_id: String) -> redis::RedisResult<PomoScore> {
+pub fn done_pomo(user_id: String, options: &str) -> redis::RedisResult<PomoScore> {
+    let mut optsfmt = Options::new();
+    optsfmt.optopt("m", "comment", "set comment", "COMMENT");
+    optsfmt.optopt("p", "point", "set point", "POINT");
+    let parsed_opts = match optsfmt.parse(options.split_whitespace().collect::<Vec<&str>>()) {
+        Ok(m) => { m }
+        Err(f) => { panic!(f.to_string()) }
+    };
+    let comment = parsed_opts.opt_str("m").unwrap_or("".to_string());
+    let point = parsed_opts.opt_str("p").unwrap_or("".to_string());
     let con = redis_con()?;
     let key = get_key(&user_id);
     let score = get_or_create_pomo(user_id)?;
     if score.remaining > 0 {
-        let new_score = score.done();
+        let new_score = score.done(comment, point);
         let _ : () = con.set(key.to_string(), serde_json::to_string(&new_score).unwrap())?;
         Ok(new_score)
     } else {
@@ -106,9 +115,17 @@ fn get_pomo_from_redis(con: &redis::Connection, key: String) -> PomoScore {
         Ok(val) => {
             match serde_json::from_str(&*val) {
                 Ok(value) => value,
-                _ => PomoScore { remaining: 0, done: 0, tomato_emoji: "".to_string(), icon_emoji:  "".to_string()}
+                _ => {
+                    match serde_json::from_str::<PomoScoreOld>(&*val) {
+                        Ok(value)  => value.convert_to_new(),
+                        _ => PomoScore::blank_score()
+                    }
+                }
             }
         }
-        _ => PomoScore { remaining: 0, done: 0, tomato_emoji: "".to_string(), icon_emoji:  "".to_string()}
+        _ => PomoScore::blank_score()
+            
     }
 }
+
+
