@@ -4,6 +4,7 @@ use std::env;
 use serde_json;
 use redis;
 use getopts::Options;
+use regex::Regex;
 
 fn get_key(user_id: &String) -> String {
     format!("{}_pomo", user_id)
@@ -58,7 +59,11 @@ pub fn done_pomo(user_id: String, options: &str) -> redis::RedisResult<PomoScore
     let mut optsfmt = Options::new();
     optsfmt.optopt("m", "comment", "set comment", "COMMENT");
     optsfmt.optopt("p", "point", "set point", "POINT");
-    let parsed_opts = match optsfmt.parse(options.split_whitespace().collect::<Vec<&str>>()) {
+    let re_words = Regex::new(r#"(["“](?P<word1>[^"]+)["”])|(?P<word2>\S+)"#).unwrap();
+    let parsed_opts = match optsfmt
+        .parse(re_words.captures_iter(options)
+               .map(|caps| caps.name("word1").map_or(caps.name("word2").map_or("", |c| c.as_str()), |c| c.as_str()))
+               .collect::<Vec<&str>>()) {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
     };

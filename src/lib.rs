@@ -8,6 +8,7 @@ extern crate redis;
 extern crate serde_json;
 extern crate rocket_contrib;
 extern crate getopts;
+extern crate regex;
 
 pub mod models;
 pub mod commands;

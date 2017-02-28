@@ -21,7 +21,7 @@ const DEFAULT_MAX_POMO: i32 = 8;
 
 fn pomo_response(user_id: String, text: &str) -> String {
     let reset = Regex::new(r"^r(eset)? *(\d*)$").unwrap();
-    let reset_only_remaining = Regex::new(r"^(rr|reset remaining)? *(\d*)$").unwrap();
+    let reset_only_remaining = Regex::new(r"^(rr|reset remaining) *(\d*)$").unwrap();
     let done = Regex::new(r"^d(one)?(.*?)$").unwrap();
     let show = Regex::new(r"^s(how)? *$").unwrap();
     let set_tomato = Regex::new(r"^(st|set tomato) (.+)$").unwrap();

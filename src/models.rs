@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 #[allow(dead_code)]
 #[derive(FromForm)]
 pub struct SlashParams {
@@ -105,11 +107,22 @@ impl PomoScore {
 
     fn show_histories(&self) -> String {
         let mut hst = "".to_string();
+        let mut sum = 0;
+        let mut real_len = 0;
         for h in self.histories.clone() {
-            let _p = if h.point.len() > 0 { h.point } else { "-".to_string() };
+            let _p = if h.point.len() > 0 { h.point.clone() } else { "-".to_string() };
             let _c = if h.comment.len() > 0 { h.comment } else { "--".to_string() };
+            if h.point.len() > 0 {
+                sum += match i32::from_str(&*h.point) {
+                    Ok(n) => n,
+                    _ => 0
+                };
+                real_len += 1;
+            }
             hst = format!("{}\n{}: {}", hst, _p, _c)
         }
+        let average = if real_len == 0 { 0.0 } else { (((sum as f32 / real_len as f32) * 10.0).round() / 10.0) };
+        hst = format!("{}\n===\naverage: {}", hst, average);
         hst
     }
 
