@@ -2,6 +2,7 @@
 name = "pomo"
 version = "1.0.3"
 authors = ["Kota Yoshitsugu <yoshitsugu@users.noreply.github.com>"]
+license = "MIT"
 
 [dependencies]
 rocket = "0.1.6"
