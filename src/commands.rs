@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn can_done_pomo() {
-        let u = "test_pomo_user".to_string();
+        let u = "test_pomo_user_done".to_string();
         let _ = set_pomo(u.clone(), 8);
         let res = done_pomo(u.clone(), "-m test -p 1").unwrap();
         assert_eq!(7, res.remaining);
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn can_set_icon_emoji() {
-        let u = "test_pomo_user".to_string();
+        let u = "test_pomo_user_icon_emoji".to_string();
         let _ = set_pomo(u.clone(), 8);
         let _ = set_icon_emoji(u.clone(), ":icon_test:");
         let res = show_pomo(u.clone());
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn can_set_tomato_emoji() {
-        let u = "test_pomo_user".to_string();
+        let u = "test_pomo_user_tomato_emoji".to_string();
         let _ = set_pomo(u.clone(), 8);
         let _ = set_tomato_emoji(u.clone(), ":tomato_test:");
         let res = show_pomo(u.clone());
