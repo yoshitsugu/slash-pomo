@@ -1,4 +1,5 @@
 # `/pomo` command
+[![Build Status](https://travis-ci.org/yoshitsugu/slash-pomo.svg?branch=master)](https://travis-ci.org/yoshitsugu/slash-pomo)
 Count down pomodoro by Slack Slash Command
 
 ## What is this?
