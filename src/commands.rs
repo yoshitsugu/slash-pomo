@@ -138,7 +138,6 @@ fn get_pomo_from_redis(con: &redis::Connection, key: String) -> PomoScore {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::set_pomo;
