@@ -11,7 +11,11 @@ fn get_key(user_id: &String) -> String {
 }
 
 pub fn redis_con() -> redis::RedisResult<redis::Connection> {
-    let redis_host = env::var("REDIS_HOST").unwrap_or("127.0.0.1".to_string());
+    let mut redis_host = env::var("REDIS_HOST").unwrap_or("127.0.0.1".to_string());
+    let redis_password = env::var("REDIS_PASSWORD").unwrap_or("".to_string());
+    if redis_password.len() > 0 {
+        redis_host = format!(":{}@{}", redis_password, redis_host);
+    }
     let redis_address = format!("redis://{}/", redis_host);
     let client = redis::Client::open(&*redis_address)?;
     let con = client.get_connection()?;

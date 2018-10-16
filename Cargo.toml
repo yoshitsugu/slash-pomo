@@ -1,13 +1,13 @@
 [package]
 name = "pomo"
-version = "1.0.4"
+version = "1.0.5"
 authors = ["Kota Yoshitsugu <yoshitsugu@users.noreply.github.com>"]
 license = "MIT"
 
 [dependencies]
-rocket = "0.3.5"
-rocket_codegen = "0.3.5"
-rocket_contrib = "0.3.5"
+rocket = "0.3.16"
+rocket_codegen = "0.3.16"
+rocket_contrib = "0.3.16"
 regex = "*"
 getopts = "0.2"
 serde = "^1.0"
